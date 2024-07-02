@@ -1,3 +1,4 @@
+import { BigInt } from "@graphprotocol/graph-ts"
 import {
   Deposit as DepositEvent,
   Harvest as HarvestEvent,
@@ -13,6 +14,7 @@ import {
   Withdraw as WithdrawEvent
 } from "../generated/Contract/Contract"
 import {
+  UserDepositState,
   Deposit,
   Harvest,
   Initialized,
@@ -31,16 +33,29 @@ export function handleDeposit(event: DepositEvent): void {
   let entity = new Deposit(
     event.transaction.hash.concatI32(event.logIndex.toI32())
   )
+
   entity.user = event.params.user
   entity.poolIndex = event.params.poolIndex
   entity.token = event.params.token
   entity.amount = event.params.amount
+  entity.logIndex = event.logIndex
 
   entity.blockNumber = event.block.number
   entity.blockTimestamp = event.block.timestamp
   entity.transactionHash = event.transaction.hash
 
+  let state = UserDepositState.load(`${event.params.user.toHexString()}#${event.params.poolIndex}`)
+  if (state == null) {
+    state = new UserDepositState(`${event.params.user.toHexString()}#${event.params.poolIndex}`)
+    state.amount = BigInt.fromI32(0);
+  }
+  
+  state.address = event.params.user
+  state.amount = state.amount.plus(event.params.amount)
+  state.poolIndex = event.params.poolIndex
+
   entity.save()
+  state.save()
 }
 
 export function handleHarvest(event: HarvestEvent): void {
@@ -51,6 +66,7 @@ export function handleHarvest(event: HarvestEvent): void {
   entity.poolIndex = event.params.poolIndex
   entity.token = event.params.token
   entity.amount = event.params.amount
+  entity.logIndex = event.logIndex
 
   entity.blockNumber = event.block.number
   entity.blockTimestamp = event.block.timestamp
@@ -109,11 +125,24 @@ export function handlePendingWithdraw(event: PendingWithdrawEvent): void {
   entity.poolIndex = event.params.poolIndex
   entity.accumAmount = event.params.accumAmount
 
+  entity.logIndex = event.logIndex
   entity.blockNumber = event.block.number
   entity.blockTimestamp = event.block.timestamp
   entity.transactionHash = event.transaction.hash
 
+  let state = UserDepositState.load(`${event.params.user.toHexString()}#${event.params.poolIndex}`)
+  if (state == null) {
+    state = new UserDepositState(`${event.params.user.toHexString()}#${event.params.poolIndex}`)
+    state.amount = BigInt.fromI32(0);
+  }
+  
+  state.address = event.params.user
+  state.amount = state.amount.minus(event.params.accumAmount)
+  state.poolIndex = event.params.poolIndex
+
   entity.save()
+  state.save()
+  
 }
 
 export function handlePoolAdded(event: PoolAddedEvent): void {
@@ -195,9 +224,22 @@ export function handleWithdraw(event: WithdrawEvent): void {
   entity.token = event.params.token
   entity.amount = event.params.amount
 
+  entity.logIndex = event.logIndex
   entity.blockNumber = event.block.number
   entity.blockTimestamp = event.block.timestamp
   entity.transactionHash = event.transaction.hash
 
+  let state = UserDepositState.load(`${event.params.user.toHexString()}#${event.params.poolIndex}`)
+  if (state == null) {
+    state = new UserDepositState(`${event.params.user.toHexString()}#${event.params.poolIndex}`)
+    state.amount = BigInt.fromI32(0);
+  }
+  
+  state.address = event.params.user
+  state.amount = state.amount.minus(event.params.amount)
+  state.poolIndex = event.params.poolIndex
+
   entity.save()
+  state.save()
+
 }

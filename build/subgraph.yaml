@@ -1,0 +1,59 @@
+specVersion: 1.0.0
+indexerHints:
+  prune: auto
+schema:
+  file: schema.graphql
+dataSources:
+  - kind: ethereum
+    name: Contract
+    network: astar-zkevm-mainnet
+    source:
+      address: "0x1AbF3A81aeb18a0EF9F5e319d7ec7483B45456fa"
+      abi: Contract
+      startBlock: 2217243
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Deposit
+        - Harvest
+        - Initialized
+        - OwnershipTransferred
+        - Paused
+        - PendingWithdraw
+        - PoolAdded
+        - PoolChangeState
+        - PoolChanged
+        - TokenWithdraw
+        - Unpaused
+        - Withdraw
+      abis:
+        - name: Contract
+          file: Contract/abis/Contract.json
+      eventHandlers:
+        - event: Deposit(indexed address,uint256,indexed address,uint128)
+          handler: handleDeposit
+        - event: Harvest(indexed address,uint256,indexed address,uint128)
+          handler: handleHarvest
+        - event: Initialized(uint64)
+          handler: handleInitialized
+        - event: OwnershipTransferred(indexed address,indexed address)
+          handler: handleOwnershipTransferred
+        - event: Paused(address)
+          handler: handlePaused
+        - event: PendingWithdraw(indexed address,uint256,uint128)
+          handler: handlePendingWithdraw
+        - event: PoolAdded(indexed address,uint32,uint256)
+          handler: handlePoolAdded
+        - event: PoolChangeState(uint256,bool)
+          handler: handlePoolChangeState
+        - event: PoolChanged(uint256)
+          handler: handlePoolChanged
+        - event: TokenWithdraw(indexed address,uint256,indexed address)
+          handler: handleTokenWithdraw
+        - event: Unpaused(address)
+          handler: handleUnpaused
+        - event: Withdraw(indexed address,uint256,indexed address,uint128)
+          handler: handleWithdraw
+      file: Contract/Contract.wasm
